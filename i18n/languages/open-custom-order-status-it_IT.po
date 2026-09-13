@@ -2,7 +2,7 @@
 # This file is distributed under the GNU General Public License v3.0.
 msgid ""
 msgstr ""
-"Project-Id-Version: WooCommerce Order Status Manager 1.11.1\n"
+"Project-Id-Version: Open Custom Order Status for WooCommerce 1.0.0\n"
 "Report-Msgid-Bugs-To: https://woocommerce.com/my-account/marketplace-ticket-"
 "form/\n"
 "POT-Creation-Date: 2019-12-12 17:16:51+00:00\n"

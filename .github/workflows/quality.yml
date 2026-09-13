@@ -1,0 +1,43 @@
+name: Plugin quality
+
+# Mirrors netwokersllc/woocommerce-listmonk-sync quality.yml. PHPCS/PSR2 is
+# omitted here on purpose: the inherited codebase follows WordPress coding
+# style, and PSR2 would fail on style alone (line length, class/file naming).
+# PHP syntax is enforced across every version the plugin claims to support.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['7.4', '8.2', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+      - name: PHP lint
+        run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      - name: Guard legacy data identifiers
+        # The rebrand must never rename DB-stored or JS-referenced
+        # identifiers. See docs/compatibility.md.
+        run: |
+          missing=0
+          grep -q "wp_ajax_wc_order_status_manager_sort_order_statuses" src/class-open-custom-order-status-ajax.php || { echo "AJAX action renamed!"; missing=1; }
+          grep -q "wc_order_status_manager_icon_options" src/class-open-custom-order-status-icons.php || { echo "icon option renamed!"; missing=1; }
+          grep -q "manage_woocommerce_order_status_emails" src/class-open-custom-order-status-post-types.php || { echo "capability renamed!"; missing=1; }
+          grep -q "'wc_order_status'" src/class-open-custom-order-status-post-types.php || { echo "post type renamed!"; missing=1; }
+          grep -q "wc_order_status_manager()" compat.php || { echo "legacy function wrapper removed!"; missing=1; }
+          exit $missing
+      - name: Validate translation templates
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq gettext >/dev/null
+          msgfmt --check-format -o /dev/null i18n/languages/open-custom-order-status.pot
+          msgfmt --check-format -o /dev/null i18n/languages/open-custom-order-status-it_IT.po
+          msgfmt --check-format -o /dev/null i18n/languages/open-custom-order-status-ru_RU.po
